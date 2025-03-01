@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@CrossOrigin("*")
 @RequestMapping("/api")
 public class BuyerController {
 
@@ -33,7 +34,7 @@ public class BuyerController {
     public Buyer login(@RequestParam String emailId,@RequestParam String password) {
             Buyer tempBuyer=buyerDaoImpl.findByEmail(emailId);
             if(tempBuyer==null) {
-                System.out.println("Account doesn't exist");
+                System.out.println("    Account doesn't exist");
                 throw new RuntimeException("Account doesn't exist");
             }
             if(tempBuyer.getPassword().equals(password)) {

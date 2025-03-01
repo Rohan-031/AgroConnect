@@ -146,6 +146,6 @@ public class RegistrationBot extends TelegramLongPollingBot {
 
     @Override
     public String getBotToken() {
-        return ""; // Keeping bot token logic as it was before
+        return "7685312291:AAEhyDHQnR6Q9DNqOZdGDG1cnkoh4aZxpkY"; // Keeping bot token logic as it was before
     }
 }
