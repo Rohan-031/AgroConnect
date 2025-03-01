@@ -11,4 +11,5 @@ import java.util.Optional;
 public interface SellerRepository extends JpaRepository<Seller, Integer> {
     Seller findByChatId(Long chatId);
     Optional<Seller> findById(int id);
+    Optional<Seller> findByEmail(String email);
 }

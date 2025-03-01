@@ -11,7 +11,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api")
+@CrossOrigin("*")
+@RequestMapping("/api/buyer")
 public class BuyerController {
 
     @Autowired
@@ -24,7 +25,7 @@ public class BuyerController {
         return buyerRepository.findAll();
     }
 
-    @GetMapping("/buyer/{buyerId}")
+    @GetMapping("/{buyerId}")
     public Buyer getBuyer(@PathVariable int buyerId) {
         return buyerDaoImpl.findById(buyerId);
     }
@@ -42,7 +43,7 @@ public class BuyerController {
             throw new RuntimeException("Wrong password");
     }
 
-    @PostMapping("/signup/buyer")
+    @PostMapping("/signup")
     public Buyer login(@RequestBody Buyer theBuyer) {
       theBuyer.setId(0);
         return buyerDaoImpl.save(theBuyer);
