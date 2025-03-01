@@ -37,6 +37,13 @@ public class Buyer {
 
     public Buyer() {}
 
+    public Buyer(Long chatId, String name, String email, String mobile) {
+        this.chatId = chatId;
+        this.name = name;
+        this.email = email;
+        this.mobile = mobile;
+    }
+
     public Buyer(int id, Long chatId, String name, String email, String password, String mobile, String address, String city, String state, double latitude, double longitude) {
         this.id = id;
         this.chatId = chatId;
