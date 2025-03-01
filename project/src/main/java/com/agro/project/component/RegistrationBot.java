@@ -1,8 +1,9 @@
 package com.agro.project.component;
 
-import com.agro.project.entity.User;
-import com.agro.project.Repository.TelegramUserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.agro.project.entity.Buyer;
+import com.agro.project.entity.Seller;
+import com.agro.project.Repository.BuyerRepository;
+import com.agro.project.Repository.SellerRepository;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -11,20 +12,21 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.HashMap;
 import java.util.Map;
-import com.agro.project.secrets.BotToken;
 
 @Component
 public class RegistrationBot extends TelegramLongPollingBot {
 
-//    @Autowired
-    private TelegramUserRepository userRepository;
-
-    public RegistrationBot(TelegramUserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
+    private final BuyerRepository buyerRepository;
+    private final SellerRepository sellerRepository;
 
     private final Map<Long, String> userStates = new HashMap<>();
-    private final Map<Long, User> tempUserData = new HashMap<>();
+    private final Map<Long, Object> tempUserData = new HashMap<>();
+
+    // Constructor Injection
+    public RegistrationBot(BuyerRepository buyerRepository, SellerRepository sellerRepository) {
+        this.buyerRepository = buyerRepository;
+        this.sellerRepository = sellerRepository;
+    }
 
     @Override
     public void onUpdateReceived(Update update) {
@@ -41,8 +43,8 @@ public class RegistrationBot extends TelegramLongPollingBot {
     }
 
     private void startRegistration(Long chatId) {
-        sendMessage(chatId, "Welcome! Let's register. Please enter your name:");
-        userStates.put(chatId, "ASK_NAME");
+        sendMessage(chatId, "Welcome! Are you a Buyer or a Seller? (Type 'Buyer' or 'Seller')");
+        userStates.put(chatId, "ASK_ROLE");
     }
 
     private void processUserInput(Long chatId, String userMessage) {
@@ -54,13 +56,33 @@ public class RegistrationBot extends TelegramLongPollingBot {
         }
 
         switch (currentState) {
-            case "ASK_NAME":
-                User user = new User();
-                user.setChatId(chatId);
-                user.setName(userMessage);
-                tempUserData.put(chatId, user);
+            case "ASK_ROLE":
+                if (userMessage.equalsIgnoreCase("Buyer")) {
+                    Buyer buyer = new Buyer();
+                    buyer.setChatId(chatId);
+                    tempUserData.put(chatId, buyer);
+                } else if (userMessage.equalsIgnoreCase("Seller")) {
+                    Seller seller = new Seller();
+                    seller.setChatId(chatId);
+                    tempUserData.put(chatId, seller);
+                } else {
+                    sendMessage(chatId, "Invalid choice! Please type 'Buyer' or 'Seller'.");
+                    return;
+                }
 
-                sendMessage(chatId, "Great! Now enter your email:");
+                sendMessage(chatId, "Great! Please enter your name:");
+                userStates.put(chatId, "ASK_NAME");
+                break;
+
+            case "ASK_NAME":
+                Object userObject = tempUserData.get(chatId);
+                if (userObject instanceof Buyer) {
+                    ((Buyer) userObject).setName(userMessage);
+                } else if (userObject instanceof Seller) {
+                    ((Seller) userObject).setName(userMessage);
+                }
+
+                sendMessage(chatId, "Now enter your email:");
                 userStates.put(chatId, "ASK_EMAIL");
                 break;
 
@@ -70,7 +92,13 @@ public class RegistrationBot extends TelegramLongPollingBot {
                     return;
                 }
 
-                tempUserData.get(chatId).setEmail(userMessage);
+                userObject = tempUserData.get(chatId);
+                if (userObject instanceof Buyer) {
+                    ((Buyer) userObject).setEmail(userMessage);
+                } else if (userObject instanceof Seller) {
+                    ((Seller) userObject).setEmail(userMessage);
+                }
+
                 sendMessage(chatId, "Now enter your mobile number:");
                 userStates.put(chatId, "ASK_MOBILE");
                 break;
@@ -81,11 +109,18 @@ public class RegistrationBot extends TelegramLongPollingBot {
                     return;
                 }
 
-                User completedUser = tempUserData.get(chatId);
-                completedUser.setMobile(userMessage);
-                userRepository.save(completedUser);
+                userObject = tempUserData.get(chatId);
+                if (userObject instanceof Buyer) {
+                    ((Buyer) userObject).setMobile(userMessage);
+                    buyerRepository.save((Buyer) userObject);
+                    sendMessage(chatId, "🎉 Your Registration Id: "+((Buyer) userObject).getId()+" Registration successful as a Buyer! 🎉");
+                } else if (userObject instanceof Seller) {
+                    ((Seller) userObject).setMobile(userMessage);
+                    sellerRepository.save((Seller) userObject);
+                    sendMessage(chatId, "🎉 Your Registration Id:"+ ((Seller) userObject).getId()+" Registration successful as a Seller! 🎉");
+                }
 
-                sendMessage(chatId, "Registration successful! 🎉");
+                // Clear stored data
                 userStates.remove(chatId);
                 tempUserData.remove(chatId);
                 break;
@@ -106,11 +141,11 @@ public class RegistrationBot extends TelegramLongPollingBot {
 
     @Override
     public String getBotUsername() {
-        return "Agro_Connection_bot"; // Replace with your bot's username
+        return "Agro_Connection_bot"; // Keeping bot username as it was before
     }
 
     @Override
     public String getBotToken() {
-        return "547457354754754"; // Replace with your bot token
+        return ""; // Keeping bot token logic as it was before
     }
 }
